@@ -2,7 +2,7 @@ This Python web scrapper was written to obtain information, including funding ye
 
 ##Required Python library
 In addition to the default libraries, urllib and datetime, two other libraries are required: 
-   [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)  and [selenium] (http://selenium-python.readthedocs.io)  
+   [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)  and [selenium] (http://selenium-python.readthedocs.io).
 
 
 ##Work flow
