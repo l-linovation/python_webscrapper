@@ -11,7 +11,6 @@ Nov. 6, 2016
 from bs4 import BeautifulSoup
 import urllib
 from selenium import webdriver
-import pandas
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
