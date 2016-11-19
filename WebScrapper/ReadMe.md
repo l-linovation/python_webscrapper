@@ -1,12 +1,11 @@
 This Python web scrapper was written to obtain information, including funding year, amount, purpose and program, of projects funded by the Bill & Melinda Gates foundation (http://gatesfoundation.org).
 
-##required Python library
+##Required Python library
 In addition to the default libraries, urllib and datetime, two other libraries are required: 
-   [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)  
-   [selenium] (http://selenium-python.readthedocs.io)  
+   [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)  and [selenium] (http://selenium-python.readthedocs.io)  
 
 
-##work flow
+##Work flow
 Step 1: query the grant-database website for one year.  
 Step 2: On the webpage of the query results, get the links of each project (HTML).  
 Step 3: Go to the link of the project and obtain the information.  
