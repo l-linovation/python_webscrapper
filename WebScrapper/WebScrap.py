@@ -1,8 +1,8 @@
 '''
 [Purpose]
-Get information about projects funded by BMG foundation. Scrap dynamic JavaScript and HTML webpage.
+Get information about projects funded by BMG foundation. Scrap dynamic and static web pages. 
 To do that:
-First, query the grant-database website for each year. On the webpage of the query results, go through each page (coded in JavaScript) and get the links of each project (HTML).
+First, query the grant-database website for each year. On the webpage of the query results, go through each page (dynamically coded) and get the links of each project (statically coded).
 Then get each project url and parse the HTML.
 [Date]
 Nov. 6, 2016
@@ -16,7 +16,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 import datetime
 
-def loadWeb(driver, url, year = ""):
+def loadWeb(driver, url, log_conn, year = ""):
     '''Load the webpage; wait till it's fully loaded'''
     driver.get(url)
     try:
@@ -34,9 +34,8 @@ def loadWeb(driver, url, year = ""):
                 expected_conditions.text_to_be_present_in_element(
                     (By.CLASS_NAME, 'next_link'), 'First'))
             except:
-                # TODO: to put something here so that the program knows there is an loading error here
-                #raise Exception('Page not loading :(')
-                print "Page not loaded." # placeholder
+                lo_conn.write(url + " Not loaded.\n")
+                return "Not loaded." 
 
 def project_href(driver, webURL = "", tagn = "span", classn = "sans-serif strong"):
     '''Get the hyperlink of every project on this page'''
@@ -73,7 +72,7 @@ def get_info(soupObj, keys, tagn1 = "div", classn1 = "articleWrapper", institute
                 adict.update({k: extract_text(element)})
     return adict
 
-def scrapHTML(urls, outfp, headers):
+def scrapHTML(urls, outfp, headers, log_file):
     '''Scrap HTML webpage and save the infomation of interest to the output file'''
     '''
     urls: urls of the websites
@@ -93,44 +92,48 @@ def scrapHTML(urls, outfp, headers):
             print info
     fo.close()
 
-def scrap(webURL, years, requestURLprefix, outfp, headers, chromedriver):
-    '''Scrap a JavaScript coded webpage, get links to HTML coded webpage where the useful information is located and write out the useful information to a file'''
+def scrap(webURL, years, requestURLprefix, outfp, headers, chromedriver, logfp):
+    '''Scrap a dynamically-coded webpage, get links to statically-coded webpage where the useful information is located and write out the useful information to a file'''
     '''
-    webURL: url of the JavaScript coded webpage
-    years: a list of years, will be used to load the database-query webpage (coded in JavaScript)
+    webURL: url of the dynamically-coded webpage
+    years: a list of years, will be used to load the database-query webpage (dynamically-coded) 
     requestURLprefix: prefix of the database-query webpage; add the year to this will be the web link for the first page of projects funded in that year
     outfp: output file path
     header: headers in the output file
     chromedriver: file path to chrome driver
+    logfp: log file path
     '''
+    log = open(logfp, "w")
     projectLinks = list()
     for year in years:
         print "Extracting year:" + str(year)
         driver = webdriver.Chrome(chromedriver)
-        loadWeb(driver, url = requestURLprefix + str(year), year = str(year))
-        projectLinks += project_href(driver, webURL, tagn = "span", classn = "sans-serif strong")
-        '''get the last page's url, get the max page number'''
-        last_page_number, pageURL_prefix = max_page_no (driver, last_link_text = "Last")
-        driver.close()
-        driver.quit()
-        '''open each dynamic web page, coded in JavaScript and get the links for each project'''
-        for page in range(84, int(last_page_number) + 1):  # Should be range(1, int(last_page_number) +1), range(84, int(last_page_number) +1) is to make the testing faster
-            driver = webdriver.Chrome(chromedriver)
-            loadWeb(driver = driver, url = pageURL_prefix + str(page))
+        msg = loadWeb(driver, url = requestURLprefix + str(year), log_conn = log, year = str(year))
+        if not msg:
             projectLinks += project_href(driver, webURL, tagn = "span", classn = "sans-serif strong")
-            print "Current total project links: " + str(len(projectLinks))
+            '''get the last page's url, get the max page number'''
+            last_page_number, pageURL_prefix = max_page_no (driver, last_link_text = "Last")
             driver.close()
             driver.quit()
-    scrapHTML(set(projectLinks), outfp, headers)
+            '''open each dynamic web page, dynamically-coded and get the links for each project'''
+            for page in range(84, int(last_page_number) + 1):  # Should be range(1, int(last_page_number) +1), range(84, int(last_page_number) +1) is to make the testing faster
+                driver = webdriver.Chrome(chromedriver)
+                loadWeb(driver = driver, url = pageURL_prefix + str(page), log_conn = log)
+                projectLinks += project_href(driver, webURL, tagn = "span", classn = "sans-serif strong")
+                print "Current total project links: " + str(len(projectLinks))
+                driver.close()
+                driver.quit()
+        scrapHTML(set(projectLinks), outfp, headers)
+    logfp.close()
 
 if __name__ == "__main__":
     print "Starts at ",
     print datetime.datetime.now()
     chromedriver = "/Users/linliu/Downloads/chromedriver" #raw_input("Type the file path of Chrome driver \n") #"/Users/linliu/Downloads/chromedriver"
-    print chromedriver
+    #print chromedriver
     webURL = "http://www.gatesfoundation.org"
     requestURL1 = "http://www.gatesfoundation.org/How-We-Work/Quick-Links/Grants-Database#q/k="
     scrap(webURL, range(2009, 2010), requestURL1, \
-    "BMF.txt", ["Date", "Institute","Program", "Amount", "Topic", "Purpose"], chromedriver)  # I used range(2009, 2010) for testing phase
+    "BMF.txt", ["Date", "Institute","Program", "Amount", "Topic", "Purpose"], chromedriver, "BMF_NotOpened.log")  # I used range(2009, 2010) for testing phase
     print "Ends at ",
     print datetime.datetime.now()
